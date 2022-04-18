@@ -2,21 +2,24 @@
 
 # Table of Contents
 
-* [Introduction](#introduction)
-* [Requirements](#requirements)
-* [ROS API](#ros-api)
-* [Getting Started](#getting-started)
+* [1. Introduction](#1-introduction)
+* [2. Requirements](#2-requirements)
+* [3. ROS API](#3-ros-api)
+* [4. Running ROS package with docker](#4-running-ros-package-with-docker)
+* [5. Running ROS package without docker](#5-running-ros-package-without-docker)
+* [6. Running ROS package with prerecorded dataset](#5-trying-ros-package-with-prerecorded-dataset)
+* [7. Getting Started without ROS](#7-getting-started-without-ros)
 
-## Introduction
+## 1. Introduction
 
 Hybrid approach of Point Cloud Registration consists of main parts: downsampling cascade, WHI feature descriptor, fast multidimensional nearest neighbors graph-search, Max Clique Inlier Selection, transformation estimator of Fast Global Registration algorithm. It also include options to use FPFH feature descriptor, transformation estimator of Teaser++ and Plane-to-Plane ICP cascade for registration refinement. This approach allows for indoor global localization of devices that build a spatial map.
 
-## Requirements
+## 2. Requirements
 
 - ubuntu 20.04
 - ros noetic
 
-## ROS API
+## 3. ROS API
 
 **Subscribed Topics**
 
@@ -37,9 +40,46 @@ Hybrid approach of Point Cloud Registration consists of main parts: downsampling
 - ~frame_id (string, default: "map") Name of parent TF.
 - ~child_id (string, default: "map_slam") Frame of child TF.
 
-## Getting Started
+## 4. Running ROS package with docker
 
-### Dependencies installation on Ubuntu/Debian:
+The easiest way to play with the package is to use docker. You can either build and run it manually, or use `docker.sh` script.
+
+Typically, you need to run one of following commands with this script:
+
+- `./docker.sh build` to build a docker image
+- `./docker.sh run` to run it
+- `./docker.sh help` to get additional info
+
+
+## 5. Running ROS package without docker
+
+Your installation process might be base don `Dockerfile`.
+
+The core of the package is `src/node.cpp` node. To use it, you should load ros parameters.
+
+The best way to use this node is to either use `launch/run.launch` file or to write your own.
+
+## 6. Running ROS package with prerecorded dataset
+
+Let's say you have 2 pcd files in your folder named `Map.pcd` and `GlobalMap.pcd`.
+
+You could play with this package by running following commands in different terminals:
+
+```bash
+./docker.sh run
+```
+
+```bash
+rosrun pcl_ros pcd_to_pointcloud Map.pcd 1.0        _frame_id:=map cloud_pcd:=/tgt_ros_cloud __name:=my_node2
+```
+
+```bash
+rosrun pcl_ros pcd_to_pointcloud GlobalMap.pcd 1.0  _frame_id:=map_slam cloud_pcd:=/src_ros_cloud __name:=my_node1
+```
+
+## 7. Getting Started without ROS
+
+### 7.1. Dependencies installation on Ubuntu/Debian:
 
 
 1) Installation of Point Cloud Library (PCL):
@@ -55,7 +95,7 @@ $ sudo apt install libopencv-dev
 $ sudo apt install libopenmpi-dev
 ```
 
-### Build on Ubuntu/Debian
+### 7.2. Build on Ubuntu/Debian
 
 From root folder:
 ```
@@ -64,7 +104,7 @@ $ cd build
 $ cmake ..
 $ make
 ```
-### Running on Ubuntu/Debian
+### 7.3. Running on Ubuntu/Debian
 From build folder:
 
 ```
