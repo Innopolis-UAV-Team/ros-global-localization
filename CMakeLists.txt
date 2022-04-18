@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(Hybrid_Approach_Point_Cloud_Registration)
+project(hapcl_registration)
 
 set (CMAKE_CXX_STANDARD 14)
 

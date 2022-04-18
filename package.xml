@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>Hybrid_Approach_Point_Cloud_Registration</name>
+  <name>hapcl_registration</name>
   <version>0.0.0</version>
   <description>The Hybrid_Approach_Point_Cloud_Registration package</description>
 

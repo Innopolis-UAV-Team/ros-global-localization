@@ -16,6 +16,8 @@ RUN if [[ "$ROS_DISTRO" = "melodic" ]] ; then apt-get install -y python-pip pyth
 # Install hybrid_pc_registration package
 COPY install_requirements.sh    install_requirements.sh
 RUN ./install_requirements.sh
+RUN apt-get install -y ros-$ROS_DISTRO-pcl-conversions
+RUN apt-get install -y ros-$ROS_DISTRO-pcl-ros
 
 # COPY repository
 COPY include/ include/
@@ -26,8 +28,7 @@ COPY CMakeLists.txt CMakeLists.txt
 COPY package.xml package.xml
 
 # Build
-RUN apt-get install -y ros-$ROS_DISTRO-pcl-conversions
-RUN apt-get install -y ros-$ROS_DISTRO-pcl-ros
+
 RUN source /opt/ros/$ROS_DISTRO/setup.bash  && cd ../../ && catkin build
 
 COPY scripts/ scripts/
