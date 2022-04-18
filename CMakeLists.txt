@@ -9,9 +9,25 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
             STRING "Choose the type of build." FORCE)
 endif ()
 
+find_package(catkin REQUIRED COMPONENTS
+    roscpp
+    rospy
+    sensor_msgs
+    geometry_msgs
+    std_srvs
+    tf2_ros
+)
+
+catkin_package(
+    CATKIN_DEPENDS sensor_msgs geometry_msgs std_srvs
+)
+
 find_package(PCL 1.8 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+###########
+## Build ##
+###########
 add_subdirectory(libs/pmc)
 add_subdirectory(libs/TEASER-plusplus)
 add_subdirectory(libs/WHI-3D-Local-Descriptor)
@@ -30,9 +46,16 @@ target_link_libraries(PCRegistrationLib
 )
 
 target_include_directories(PCRegistrationLib PUBLIC ./include)
-	
 add_executable(HAPCR ./test/main.cpp)
-
 target_link_libraries(HAPCR PCRegistrationLib)
 
-
+# Build node
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+)
+add_executable(node src/node.cpp)
+add_dependencies(node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(node
+    ${catkin_LIBRARIES}
+)
