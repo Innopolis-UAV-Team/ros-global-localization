@@ -39,13 +39,26 @@ class HAPCLRegistrationROS {
     sensor_msgs::PointCloud2Ptr _src_ros_cloud;
     sensor_msgs::PointCloud2Ptr _tgt_ros_cloud;
     geometry_msgs::TransformStamped _transform;
+    std::string _parent_frame_id;
+    std::string _child_frame_id;
 };
 
 
 int8_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
     _src_ros_cloud_sub = nh.subscribe("src_ros_cloud", 1, &HAPCLRegistrationROS::src_cloud_cb, this);
     _tgt_ros_cloud_sub = nh.subscribe("tgt_ros_cloud", 1, &HAPCLRegistrationROS::tgt_cloud_cb, this);
-    return 0;
+
+    int res = 0;
+    if (!nh.getParam("parent_frame_id", _parent_frame_id)) {
+        ROS_ERROR("Parameter parent_frame_id is missing.");
+        res = -1;
+    }
+    if (!nh.getParam("child_frame_id", _child_frame_id)) {
+        ROS_ERROR("Parameter child_frame_id is missing.");
+        res = -1;
+    }
+
+    return res;
 }
 
 int8_t HAPCLRegistrationROS::process() {
@@ -97,8 +110,8 @@ void HAPCLRegistrationROS::convert_transf_matrix_to_tf(const Eigen::Matrix4f& tr
     Eigen::Affine3d eigen_affine_transform;
     eigen_affine_transform.matrix() = trans_matrix.cast<double>();
     _transform = tf2::eigenToTransform(eigen_affine_transform);
-    _transform.header.frame_id = "/world";
-    _transform.child_frame_id = "/odom";
+    _transform.header.frame_id = _parent_frame_id;
+    _transform.child_frame_id = _child_frame_id;
     _transform.header.stamp = ros::Time::now();
 }
 
@@ -115,7 +128,9 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     HAPCLRegistrationROS hapcl;
-    hapcl.init(nh);
+    if (-1 == hapcl.init(nh)) {
+        return 0;
+    }
 
     while (ros::ok()) {
         ros::spinOnce();

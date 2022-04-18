@@ -32,6 +32,7 @@ RUN source /opt/ros/$ROS_DISTRO/setup.bash  && cd ../../ && catkin build
 
 COPY scripts/ scripts/
 COPY launch/ launch/
+COPY config/ config/
 
 CMD echo "main process has been started"            &&  \
     echo "container has been finished"
