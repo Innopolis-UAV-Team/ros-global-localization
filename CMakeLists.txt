@@ -16,14 +16,15 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
     std_srvs
     tf2_ros
-)
-
-catkin_package(
-    CATKIN_DEPENDS sensor_msgs geometry_msgs std_srvs
+    tf2_eigen
 )
 
 find_package(PCL 1.8 REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+catkin_package(
+    CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs std_srvs
+)
 
 ###########
 ## Build ##
@@ -34,29 +35,34 @@ add_subdirectory(libs/WHI-3D-Local-Descriptor)
 add_subdirectory(libs/hnsw)
 add_subdirectory(libs/Fast-Global-Registration)
 
-add_library(PCRegistrationLib STATIC ./src/PCRegistration.cpp ./src/app_exception.cpp)
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${PCL_LIBRARIES}
+    ${EIGEN3_INCLUDE_DIRS}
+)
 
-target_link_libraries(PCRegistrationLib 
-    PUBLIC ${PCL_LIBRARIES} 
+add_library(${PROJECT_NAME} STATIC ./src/PCRegistration.cpp ./src/app_exception.cpp)
+
+
+# 1. Build Library
+add_executable(HAPCR ./test/main.cpp)
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC ${PCL_LIBRARIES}
     PUBLIC Eigen3::Eigen
     PRIVATE fast_global_registration
     PRIVATE WHI_feature
     PRIVATE teaser_registration
     PRIVATE HNSW_graph_search
 )
+target_include_directories(${PROJECT_NAME} PUBLIC ./include)
+target_link_libraries(HAPCR ${PROJECT_NAME})
 
-target_include_directories(PCRegistrationLib PUBLIC ./include)
-add_executable(HAPCR ./test/main.cpp)
-target_link_libraries(HAPCR PCRegistrationLib)
-
-# Build node
-include_directories(
-    include
-    ${catkin_INCLUDE_DIRS}
-)
+# 2. Build Node
 add_executable(node src/node.cpp)
-add_dependencies(node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_include_directories(node PUBLIC ./include)
 target_link_libraries(node
+    PUBLIC ${PROJECT_NAME}
     PUBLIC ${catkin_LIBRARIES}
     PUBLIC ${PCL_LIBRARIES}
     PUBLIC Eigen3::Eigen
@@ -65,3 +71,5 @@ target_link_libraries(node
     PRIVATE teaser_registration
     PRIVATE HNSW_graph_search
 )
+include_directories(include ${catkin_INCLUDE_DIRS})
+add_dependencies(node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

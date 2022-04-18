@@ -28,7 +28,6 @@ COPY CMakeLists.txt CMakeLists.txt
 COPY package.xml package.xml
 
 # Build
-
 RUN source /opt/ros/$ROS_DISTRO/setup.bash  && cd ../../ && catkin build
 
 COPY scripts/ scripts/
