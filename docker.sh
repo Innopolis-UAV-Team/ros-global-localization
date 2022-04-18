@@ -59,7 +59,7 @@ push_docker_image() {
 
 run() {
     setup_config
-    echo "Not ready yet"
+    docker container run --rm $DOCKER_FLAGS $DOCKER_CONTAINER_NAME ./scripts/run.sh
 }
 
 run_rviz() {
@@ -78,7 +78,7 @@ run_interactive() {
 }
 
 kill_all_containers() {
-    docker kill $(sudo docker ps -q)
+    docker kill $(docker ps -q)
 }
 
 
