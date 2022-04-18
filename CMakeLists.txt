@@ -37,12 +37,12 @@ add_subdirectory(libs/Fast-Global-Registration)
 add_library(PCRegistrationLib STATIC ./src/PCRegistration.cpp ./src/app_exception.cpp)
 
 target_link_libraries(PCRegistrationLib 
-	PUBLIC ${PCL_LIBRARIES} 
-	PUBLIC Eigen3::Eigen
-	PRIVATE fast_global_registration
-	PRIVATE WHI_feature
-	PRIVATE teaser_registration
-	PRIVATE HNSW_graph_search
+    PUBLIC ${PCL_LIBRARIES} 
+    PUBLIC Eigen3::Eigen
+    PRIVATE fast_global_registration
+    PRIVATE WHI_feature
+    PRIVATE teaser_registration
+    PRIVATE HNSW_graph_search
 )
 
 target_include_directories(PCRegistrationLib PUBLIC ./include)
