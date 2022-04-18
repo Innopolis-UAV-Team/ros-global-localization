@@ -26,7 +26,12 @@ COPY CMakeLists.txt CMakeLists.txt
 COPY package.xml package.xml
 
 # Build
+RUN apt-get install -y ros-$ROS_DISTRO-pcl-conversions
+RUN apt-get install -y ros-$ROS_DISTRO-pcl-ros
 RUN source /opt/ros/$ROS_DISTRO/setup.bash  && cd ../../ && catkin build
+
+COPY scripts/ scripts/
+COPY launch/ launch/
 
 CMD echo "main process has been started"            &&  \
     echo "container has been finished"

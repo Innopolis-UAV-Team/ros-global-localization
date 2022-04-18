@@ -57,5 +57,11 @@ include_directories(
 add_executable(node src/node.cpp)
 add_dependencies(node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(node
-    ${catkin_LIBRARIES}
+    PUBLIC ${catkin_LIBRARIES}
+    PUBLIC ${PCL_LIBRARIES}
+    PUBLIC Eigen3::Eigen
+    PRIVATE fast_global_registration
+    PRIVATE WHI_feature
+    PRIVATE teaser_registration
+    PRIVATE HNSW_graph_search
 )
