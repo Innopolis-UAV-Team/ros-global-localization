@@ -36,9 +36,12 @@ Hybrid approach of Point Cloud Registration consists of main parts: downsampling
 
 **Parameters**
 
-- ~rate (float, default: 100) Frame rate of TF publiser
-- ~frame_id (string, default: "map") Name of parent TF.
-- ~child_id (string, default: "map_slam") Frame of child TF.
+| № | Name                | Type   | Default value | Description               |
+| - | ------------------- |:------:|:-------------:|:-------------------------:|
+| 1 | tf_pub_rate         | float  | 200           | Frame rate of TF publiser |
+| 2 | parent_frame_id     | string | map           | Name of parent TF         |
+| 3 | child_frame_id      | string | map_slam      | Name of child TF          |
+| 4 | mode_pub_by_request | bool   | true          | True means performing transform and publication only by a request. False means performing transform and publication automatically when receive a new data. The node publishes TF with fixed rate in any mode. |
 
 ## 4. Running ROS package with docker
 

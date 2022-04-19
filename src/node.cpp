@@ -6,6 +6,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <std_srvs/Trigger.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <pcl/io/pcd_io.h>
@@ -28,32 +29,53 @@ enum ErrorCode_t: int8_t {
 class HAPCLRegistrationROS {
   public:
     HAPCLRegistrationROS() {};
+
+    /**
+     * @brief Initialize the node in the mode defined by the ROS parameters.
+     * @return STATUS_ERROR, if something wrong happend and whole application should be finished.
+     *  return STATUS_OK, if everything is ok.
+     */
     ErrorCode_t init(ros::NodeHandle& nh);
-    ErrorCode_t perform_transformation();
-    void src_cloud_cb(const sensor_msgs::PointCloud2Ptr& src_ros_point_cloud);
-    void tgt_cloud_cb(const sensor_msgs::PointCloud2Ptr& tgt_ros_point_cloud);
+
+    /**
+     * @brief Spin with the initialized parameters.
+     * This call may take some time if you are using it in self-publishing mode (_mode_pub_by_request=false).
+     */
+    void spin_once();
 
   private:
+    ErrorCode_t perform_transformation();
+    void publish_tf();
     void convert_cloud_ros_to_pcl(const sensor_msgs::PointCloud2Ptr& ros_point_cloud,
                                   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud);
     void convert_transf_matrix_to_tf(const Eigen::Matrix4f& trans_matrix);
 
     RegistrationPC _registration_pc;
+
     ros::Subscriber _src_ros_cloud_sub;
     ros::Subscriber _tgt_ros_cloud_sub;
+    ros::ServiceServer _relocalize_srv;
     tf2_ros::TransformBroadcaster _tf_pub;
+
     sensor_msgs::PointCloud2Ptr _src_ros_cloud;
     sensor_msgs::PointCloud2Ptr _tgt_ros_cloud;
     geometry_msgs::TransformStamped _transform;
+
     std::string _parent_frame_id;
     std::string _child_frame_id;
+    double _next_tf_pub_time_sec{ros::Time::now().toSec()};
+    double _tf_pub_rate;
+    bool _mode_pub_by_request;
+
+  public:
+    ///< These methods are public because they are handled via ROS spin. Don't use them directly.
+    void src_cloud_cb(const sensor_msgs::PointCloud2Ptr& src_ros_point_cloud);
+    void tgt_cloud_cb(const sensor_msgs::PointCloud2Ptr& tgt_ros_point_cloud);
+    bool relocalize_cb(std_srvs::Trigger::Request& request, std_srvs::Trigger::Response& response);
 };
 
 
 ErrorCode_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
-    _src_ros_cloud_sub = nh.subscribe("src_ros_cloud", 1, &HAPCLRegistrationROS::src_cloud_cb, this);
-    _tgt_ros_cloud_sub = nh.subscribe("tgt_ros_cloud", 1, &HAPCLRegistrationROS::tgt_cloud_cb, this);
-
     auto res = STATUS_OK;
     if (!nh.getParam("parent_frame_id", _parent_frame_id)) {
         ROS_ERROR("Parameter parent_frame_id is missing.");
@@ -63,19 +85,40 @@ ErrorCode_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
         ROS_ERROR("Parameter child_frame_id is missing.");
         res = STATUS_ERROR;
     }
+    if (!nh.getParam("tf_pub_rate", _tf_pub_rate) || (_tf_pub_rate < 0.01)) {
+        ROS_ERROR("Parameter tf_pub_rate is missing or invalid.");
+        res = STATUS_ERROR;
+    }
+    if (!nh.getParam("mode_pub_by_request", _mode_pub_by_request)) {
+        ROS_ERROR("Parameter mode_pub_by_request is missing.");
+        res = STATUS_ERROR;
+    }
+
+    _src_ros_cloud_sub = nh.subscribe("src_ros_cloud", 1, &HAPCLRegistrationROS::src_cloud_cb, this);
+    _tgt_ros_cloud_sub = nh.subscribe("tgt_ros_cloud", 1, &HAPCLRegistrationROS::tgt_cloud_cb, this);
+    _relocalize_srv = nh.advertiseService("relocalize", &HAPCLRegistrationROS::relocalize_cb, this);
 
     return res;
 }
 
+void HAPCLRegistrationROS::spin_once() {
+    if (!_mode_pub_by_request) {
+        if (STATUS_ERROR == perform_transformation()) {
+            ros::Duration(1.0).sleep();
+        }
+    }
+    publish_tf();
+}
+
 ErrorCode_t HAPCLRegistrationROS::perform_transformation() {
     if (!_tgt_ros_cloud || !_src_ros_cloud) {
-        ROS_INFO("Input ROS cloud is not appeared yet.");
+        ROS_WARN("HAPCL: Input ROS cloud is not appeared yet.");
         return STATUS_ERROR;
     }
 
     if (!_tgt_ros_cloud->height || !_tgt_ros_cloud->width ||
             !_src_ros_cloud->height || !_src_ros_cloud->width) {
-        ROS_WARN("Input ROS cloud is empty.");
+        ROS_WARN("HAPCL: Input ROS cloud is empty.");
         return STATUS_ERROR;
     }
 
@@ -92,16 +135,33 @@ ErrorCode_t HAPCLRegistrationROS::perform_transformation() {
         return STATUS_ERROR;
     }
 
-    ROS_INFO("started conversion");
     Eigen::Matrix4f trans_matrix = _registration_pc.Registration(tgt_pcl_cloud_ptr, src_pcl_cloud_ptr);
-    ROS_INFO("finished conversion");
-
     convert_transf_matrix_to_tf(trans_matrix);
-    _tf_pub.sendTransform(_transform);
 
     _src_ros_cloud = NULL;
     _tgt_ros_cloud = NULL;
     return STATUS_OK;
+}
+
+void HAPCLRegistrationROS::publish_tf() {
+    double crnt_time_sec = ros::Time::now().toSec();
+    if (crnt_time_sec < _next_tf_pub_time_sec ||
+            !_transform.header.frame_id.size() ||
+            !_transform.child_frame_id.size()) {
+        return;
+    }
+
+    ///< It is guaranted (by init() method) that _tf_pub_rate is not zero
+    _next_tf_pub_time_sec = crnt_time_sec + 1 / _tf_pub_rate;
+
+    if (!_transform.header.frame_id.size() || !_transform.child_frame_id.size()) {
+        ROS_WARN_THROTTLE(5, "HAPCL: TF is not ready yet.");
+        return;
+    }
+
+    _transform.header.stamp = ros::Time::now();
+    _tf_pub.sendTransform(_transform);
+
 }
 
 void HAPCLRegistrationROS::src_cloud_cb(const sensor_msgs::PointCloud2Ptr& src_ros_cloud_ptr) {
@@ -112,13 +172,23 @@ void HAPCLRegistrationROS::tgt_cloud_cb(const sensor_msgs::PointCloud2Ptr& tgt_r
     _tgt_ros_cloud = tgt_ros_cloud_ptr;
 }
 
+bool HAPCLRegistrationROS::relocalize_cb(std_srvs::Trigger::Request& request, std_srvs::Trigger::Response& response) {
+    if (_mode_pub_by_request) {
+        response.success = (perform_transformation() == STATUS_OK) ? true : false;
+    } else {
+        ROS_WARN("HAPCL: the node is initialized in a self-publishing mode. The requst has been ignored.");
+        response.success = false;
+    }
+    return response.success;
+}
+
+
 void HAPCLRegistrationROS::convert_transf_matrix_to_tf(const Eigen::Matrix4f& trans_matrix) {
     Eigen::Affine3d eigen_affine_transform;
     eigen_affine_transform.matrix() = trans_matrix.cast<double>();
     _transform = tf2::eigenToTransform(eigen_affine_transform);
     _transform.header.frame_id = _parent_frame_id;
     _transform.child_frame_id = _child_frame_id;
-    _transform.header.stamp = ros::Time::now();
 }
 
 void HAPCLRegistrationROS::convert_cloud_ros_to_pcl(const sensor_msgs::PointCloud2Ptr& ros_point_cloud,
@@ -135,15 +205,13 @@ int main(int argc, char **argv) {
 
     HAPCLRegistrationROS hapcl;
     if (STATUS_ERROR == hapcl.init(nh)) {
-        return 0;
+        return STATUS_ERROR;
     }
 
     while (ros::ok()) {
         ros::spinOnce();
-        if (STATUS_ERROR == hapcl.perform_transformation()) {
-            ros::Duration(1.0).sleep();
-        }
+        hapcl.spin_once();
     }
 
-    return 0;
+    return STATUS_OK;
 }
