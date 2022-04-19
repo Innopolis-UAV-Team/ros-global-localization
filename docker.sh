@@ -8,13 +8,13 @@ https://tfs.university.innopolis.ru/tfs/IndustrialRoboticsLab/Colocalization/_gi
 usage: docker.sh [build | pull | push | run | test | interactive | kill | help]
 
 Commands:
-build           Build docker image.
-pull            Pull docker image.
-push            Push docker image.
-run             Run inclinometer
-rviz            Run inclinometer with rviz.
+build           Build the docker image.
+pull            Pull the docker image.
+push            Push the docker image.
+run             Run the container with node.
+rviz            Run the container with node and rviz.
 test            Run tests
-interactive     Run container in interactive mode.
+interactive     Run the container in interactive mode.
 kill            Kill all containers.
 help            Print this message and exit"
 }
@@ -64,7 +64,8 @@ run() {
 
 run_rviz() {
     setup_config
-    echo "Not ready yet"
+    xhost +local:docker
+    docker container run --rm $DOCKER_FLAGS $DOCKER_CONTAINER_NAME ./scripts/run_with_rviz.sh
 }
 
 test() {
@@ -74,7 +75,7 @@ test() {
 
 run_interactive() {
     setup_config
-    echo "Not ready yet"
+    sudo docker container run --rm -it $DOCKER_FLAGS $DOCKER_CONTAINER_NAME /bin/bash
 }
 
 kill_all_containers() {

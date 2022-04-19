@@ -48,6 +48,7 @@ Typically, you need to run one of following commands with this script:
 
 - `./docker.sh build` to build a docker image
 - `./docker.sh run` to run it
+- `./docker.sh rviz` to run it with rviz
 - `./docker.sh help` to get additional info
 
 
@@ -66,7 +67,7 @@ Let's say you have 2 pcd files in your folder named `Map.pcd` and `GlobalMap.pcd
 You could play with this package by running following commands in different terminals:
 
 ```bash
-./docker.sh run
+./docker.sh rviz
 ```
 
 ```bash
