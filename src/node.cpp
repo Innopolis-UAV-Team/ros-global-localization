@@ -19,11 +19,17 @@
 #include "PCRegistration.h"
 
 
+enum ErrorCode_t: int8_t {
+    STATUS_ERROR = -1,
+    STATUS_OK = 0,
+};
+
+
 class HAPCLRegistrationROS {
   public:
     HAPCLRegistrationROS() {};
-    int8_t init(ros::NodeHandle& nh);
-    int8_t process();
+    ErrorCode_t init(ros::NodeHandle& nh);
+    ErrorCode_t perform_transformation();
     void src_cloud_cb(const sensor_msgs::PointCloud2Ptr& src_ros_point_cloud);
     void tgt_cloud_cb(const sensor_msgs::PointCloud2Ptr& tgt_ros_point_cloud);
 
@@ -44,33 +50,33 @@ class HAPCLRegistrationROS {
 };
 
 
-int8_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
+ErrorCode_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
     _src_ros_cloud_sub = nh.subscribe("src_ros_cloud", 1, &HAPCLRegistrationROS::src_cloud_cb, this);
     _tgt_ros_cloud_sub = nh.subscribe("tgt_ros_cloud", 1, &HAPCLRegistrationROS::tgt_cloud_cb, this);
 
-    int res = 0;
+    auto res = STATUS_OK;
     if (!nh.getParam("parent_frame_id", _parent_frame_id)) {
         ROS_ERROR("Parameter parent_frame_id is missing.");
-        res = -1;
+        res = STATUS_ERROR;
     }
     if (!nh.getParam("child_frame_id", _child_frame_id)) {
         ROS_ERROR("Parameter child_frame_id is missing.");
-        res = -1;
+        res = STATUS_ERROR;
     }
 
     return res;
 }
 
-int8_t HAPCLRegistrationROS::process() {
+ErrorCode_t HAPCLRegistrationROS::perform_transformation() {
     if (!_tgt_ros_cloud || !_src_ros_cloud) {
         ROS_INFO("Input ROS cloud is not appeared yet.");
-        return -1;
+        return STATUS_ERROR;
     }
 
     if (!_tgt_ros_cloud->height || !_tgt_ros_cloud->width ||
             !_src_ros_cloud->height || !_src_ros_cloud->width) {
         ROS_WARN("Input ROS cloud is empty.");
-        return -1;
+        return STATUS_ERROR;
     }
 
     pcl::PointCloud<pcl::PointXYZ> tgt_pcl_cloud;
@@ -83,7 +89,7 @@ int8_t HAPCLRegistrationROS::process() {
 
     if (!tgt_pcl_cloud_ptr->size() || !src_pcl_cloud_ptr->size()) {
         ROS_WARN("Cannot create a KDTree with an empty input cloud.");
-        return -1;
+        return STATUS_ERROR;
     }
 
     ROS_INFO("started conversion");
@@ -95,7 +101,7 @@ int8_t HAPCLRegistrationROS::process() {
 
     _src_ros_cloud = NULL;
     _tgt_ros_cloud = NULL;
-    return 0;
+    return STATUS_OK;
 }
 
 void HAPCLRegistrationROS::src_cloud_cb(const sensor_msgs::PointCloud2Ptr& src_ros_cloud_ptr) {
@@ -128,13 +134,13 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     HAPCLRegistrationROS hapcl;
-    if (-1 == hapcl.init(nh)) {
+    if (STATUS_ERROR == hapcl.init(nh)) {
         return 0;
     }
 
     while (ros::ok()) {
         ros::spinOnce();
-        if (0 != hapcl.process()) {
+        if (STATUS_ERROR == hapcl.perform_transformation()) {
             ros::Duration(1.0).sleep();
         }
     }
