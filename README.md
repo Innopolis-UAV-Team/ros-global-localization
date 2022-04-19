@@ -74,11 +74,11 @@ You could play with this package by running following commands in different term
 ```
 
 ```bash
-rosrun pcl_ros pcd_to_pointcloud Map.pcd 1.0        _frame_id:=map cloud_pcd:=/tgt_ros_cloud __name:=my_node2
+rosrun pcl_ros pcd_to_pointcloud Map.pcd 1.0        _frame_id:=map cloud_pcd:=/local_map __name:=my_node2
 ```
 
 ```bash
-rosrun pcl_ros pcd_to_pointcloud GlobalMap.pcd 1.0  _frame_id:=map_slam cloud_pcd:=/src_ros_cloud __name:=my_node1
+rosrun pcl_ros pcd_to_pointcloud GlobalMap.pcd 1.0  _frame_id:=map_slam cloud_pcd:=/global_map __name:=my_node1
 ```
 
 ## 7. Getting Started without ROS

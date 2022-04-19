@@ -75,7 +75,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /src_ros_cloud
+      Topic: /global_map
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -103,7 +103,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /tgt_ros_cloud
+      Topic: /local_map
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true

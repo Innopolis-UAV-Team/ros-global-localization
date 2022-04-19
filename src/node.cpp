@@ -94,8 +94,8 @@ ErrorCode_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
         res = STATUS_ERROR;
     }
 
-    _src_ros_cloud_sub = nh.subscribe("src_ros_cloud", 1, &HAPCLRegistrationROS::src_cloud_cb, this);
-    _tgt_ros_cloud_sub = nh.subscribe("tgt_ros_cloud", 1, &HAPCLRegistrationROS::tgt_cloud_cb, this);
+    _src_ros_cloud_sub = nh.subscribe("global_map", 1, &HAPCLRegistrationROS::src_cloud_cb, this);
+    _tgt_ros_cloud_sub = nh.subscribe("local_map", 1, &HAPCLRegistrationROS::tgt_cloud_cb, this);
     _relocalize_srv = nh.advertiseService("relocalize", &HAPCLRegistrationROS::relocalize_cb, this);
 
     return res;
