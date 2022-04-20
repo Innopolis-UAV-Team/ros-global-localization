@@ -46,7 +46,7 @@ add_library(${PROJECT_NAME} STATIC ./src/PCRegistration.cpp ./src/app_exception.
 
 
 # 1. Build Library
-add_executable(HAPCR ./test/main.cpp)
+add_executable(PCRegistrationAlgorithmTest ./test/main.cpp)
 target_link_libraries(${PROJECT_NAME}
     PUBLIC ${PCL_LIBRARIES}
     PUBLIC Eigen3::Eigen
@@ -56,7 +56,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE HNSW_graph_search
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
-target_link_libraries(HAPCR ${PROJECT_NAME})
+target_link_libraries(PCRegistrationAlgorithmTest ${PROJECT_NAME})
 
 # 2. Build Node
 add_executable(node src/node.cpp)

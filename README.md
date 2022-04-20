@@ -112,6 +112,6 @@ $ make
 From build folder:
 
 ```
-$  ./HAPCR <target_point_cloud> <source_point_cloud>
+$  ./PCRegistrationAlgorithmTest <target_point_cloud> <source_point_cloud>
 ```
 * \<target_point_cloud\> and \<source_point_cloud> are the point cloud files of pcd format.
