@@ -5,4 +5,4 @@ source /catkin_ws/devel/setup.bash
 set -e
 
 # set `line buffering` mode to stdout
-stdbuf -o L roslaunch hapcl_registration run.launch
+stdbuf -o L roslaunch pc_global_localization run.launch

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>hapcl_registration</name>
+  <name>pc_global_localization</name>
   <version>0.0.0</version>
   <description>The Hybrid Approach Point Cloud Registration package</description>
 
