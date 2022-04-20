@@ -43,10 +43,6 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME} STATIC ./src/PCRegistration.cpp ./src/app_exception.cpp)
-
-
-# 1. Build Library
-add_executable(PCRegistrationAlgorithmTest ./test/main.cpp)
 target_link_libraries(${PROJECT_NAME}
     PUBLIC ${PCL_LIBRARIES}
     PUBLIC Eigen3::Eigen
@@ -56,20 +52,14 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE HNSW_graph_search
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
+
+# 1. Build test node
+add_executable(PCRegistrationAlgorithmTest ./test/main.cpp)
 target_link_libraries(PCRegistrationAlgorithmTest ${PROJECT_NAME})
 
-# 2. Build Node
-add_executable(pc_global_localization src/PCGlobalLocalizationROS.cpp)
-target_include_directories(pc_global_localization PUBLIC ./include)
-target_link_libraries(pc_global_localization
-    PUBLIC ${PROJECT_NAME}
-    PUBLIC ${catkin_LIBRARIES}
-    PUBLIC ${PCL_LIBRARIES}
-    PUBLIC Eigen3::Eigen
-    PRIVATE fast_global_registration
-    PRIVATE WHI_feature
-    PRIVATE teaser_registration
-    PRIVATE HNSW_graph_search
+# 2. Build main node
+add_executable(${PROJECT_NAME}_node src/PCGlobalLocalizationROS.cpp)
+target_link_libraries(${PROJECT_NAME}_node
+    ${PROJECT_NAME}
+    ${catkin_LIBRARIES}
 )
-include_directories(include ${catkin_INCLUDE_DIRS})
-add_dependencies(pc_global_localization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

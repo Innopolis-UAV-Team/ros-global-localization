@@ -59,7 +59,7 @@ Typically, you need to run one of following commands with this script:
 
 Your installation process might be base don `Dockerfile`.
 
-The core of the package is `pc_global_localization` node. To use it, you should load ros parameters.
+The core of the package is `pc_global_localization_node` node. To use it, you should load ros parameters.
 
 The best way to use this node is to either use `launch/run_pc_global_localization.launch` file or to write your own.
 
