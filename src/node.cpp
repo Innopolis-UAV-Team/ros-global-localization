@@ -26,9 +26,9 @@ enum ErrorCode_t: int8_t {
 };
 
 
-class HAPCLRegistrationROS {
+class PCGlobalLocalizationROS {
   public:
-    HAPCLRegistrationROS() {};
+    PCGlobalLocalizationROS() {};
 
     /**
      * @brief Initialize the node in the mode defined by the ROS parameters.
@@ -75,7 +75,7 @@ class HAPCLRegistrationROS {
 };
 
 
-ErrorCode_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
+ErrorCode_t PCGlobalLocalizationROS::init(ros::NodeHandle& nh) {
     auto res = STATUS_OK;
     if (!nh.getParam("parent_frame_id", _parent_frame_id)) {
         ROS_ERROR("Parameter parent_frame_id is missing.");
@@ -94,14 +94,14 @@ ErrorCode_t HAPCLRegistrationROS::init(ros::NodeHandle& nh) {
         res = STATUS_ERROR;
     }
 
-    _src_ros_cloud_sub = nh.subscribe("global_map", 1, &HAPCLRegistrationROS::src_cloud_cb, this);
-    _tgt_ros_cloud_sub = nh.subscribe("local_map", 1, &HAPCLRegistrationROS::tgt_cloud_cb, this);
-    _relocalize_srv = nh.advertiseService("relocalize", &HAPCLRegistrationROS::relocalize_cb, this);
+    _src_ros_cloud_sub = nh.subscribe("global_map", 1, &PCGlobalLocalizationROS::src_cloud_cb, this);
+    _tgt_ros_cloud_sub = nh.subscribe("local_map", 1, &PCGlobalLocalizationROS::tgt_cloud_cb, this);
+    _relocalize_srv = nh.advertiseService("relocalize", &PCGlobalLocalizationROS::relocalize_cb, this);
 
     return res;
 }
 
-void HAPCLRegistrationROS::spin_once() {
+void PCGlobalLocalizationROS::spin_once() {
     if (!_mode_pub_by_request) {
         if (STATUS_ERROR == perform_transformation()) {
             ros::Duration(1.0).sleep();
@@ -110,7 +110,7 @@ void HAPCLRegistrationROS::spin_once() {
     publish_tf();
 }
 
-ErrorCode_t HAPCLRegistrationROS::perform_transformation() {
+ErrorCode_t PCGlobalLocalizationROS::perform_transformation() {
     if (!_tgt_ros_cloud || !_src_ros_cloud) {
         ROS_WARN("HAPCL: Input ROS cloud is not appeared yet.");
         return STATUS_ERROR;
@@ -143,7 +143,7 @@ ErrorCode_t HAPCLRegistrationROS::perform_transformation() {
     return STATUS_OK;
 }
 
-void HAPCLRegistrationROS::publish_tf() {
+void PCGlobalLocalizationROS::publish_tf() {
     double crnt_time_sec = ros::Time::now().toSec();
     if (crnt_time_sec < _next_tf_pub_time_sec ||
             !_transform.header.frame_id.size() ||
@@ -164,15 +164,15 @@ void HAPCLRegistrationROS::publish_tf() {
 
 }
 
-void HAPCLRegistrationROS::src_cloud_cb(const sensor_msgs::PointCloud2Ptr& src_ros_cloud_ptr) {
+void PCGlobalLocalizationROS::src_cloud_cb(const sensor_msgs::PointCloud2Ptr& src_ros_cloud_ptr) {
     _src_ros_cloud = src_ros_cloud_ptr;
 }
 
-void HAPCLRegistrationROS::tgt_cloud_cb(const sensor_msgs::PointCloud2Ptr& tgt_ros_cloud_ptr) {
+void PCGlobalLocalizationROS::tgt_cloud_cb(const sensor_msgs::PointCloud2Ptr& tgt_ros_cloud_ptr) {
     _tgt_ros_cloud = tgt_ros_cloud_ptr;
 }
 
-bool HAPCLRegistrationROS::relocalize_cb(std_srvs::Trigger::Request& request, std_srvs::Trigger::Response& response) {
+bool PCGlobalLocalizationROS::relocalize_cb(std_srvs::Trigger::Request& request, std_srvs::Trigger::Response& response) {
     if (_mode_pub_by_request) {
         response.success = (perform_transformation() == STATUS_OK) ? true : false;
     } else {
@@ -183,7 +183,7 @@ bool HAPCLRegistrationROS::relocalize_cb(std_srvs::Trigger::Request& request, st
 }
 
 
-void HAPCLRegistrationROS::convert_transf_matrix_to_tf(const Eigen::Matrix4f& trans_matrix) {
+void PCGlobalLocalizationROS::convert_transf_matrix_to_tf(const Eigen::Matrix4f& trans_matrix) {
     Eigen::Affine3d eigen_affine_transform;
     eigen_affine_transform.matrix() = trans_matrix.cast<double>();
     _transform = tf2::eigenToTransform(eigen_affine_transform);
@@ -191,7 +191,7 @@ void HAPCLRegistrationROS::convert_transf_matrix_to_tf(const Eigen::Matrix4f& tr
     _transform.child_frame_id = _child_frame_id;
 }
 
-void HAPCLRegistrationROS::convert_cloud_ros_to_pcl(const sensor_msgs::PointCloud2Ptr& ros_point_cloud,
+void PCGlobalLocalizationROS::convert_cloud_ros_to_pcl(const sensor_msgs::PointCloud2Ptr& ros_point_cloud,
                                                     pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud) {
     pcl::PCLPointCloud2 pcl_pc2;
     pcl_conversions::toPCL(*ros_point_cloud, pcl_pc2);
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "node");
     ros::NodeHandle nh;
 
-    HAPCLRegistrationROS hapcl;
+    PCGlobalLocalizationROS hapcl;
     if (STATUS_ERROR == hapcl.init(nh)) {
         return STATUS_ERROR;
     }
