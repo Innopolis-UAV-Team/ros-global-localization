@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <rosparam file="$(find pc_global_localization)/config/params.yaml" command="load"/>
-    <node pkg="pc_global_localization" type="node" name="node" output="screen" required="true"/>
+    <node pkg="pc_global_localization" type="pc_global_localization" name="pc_global_localization" output="screen" required="true"/>
 </launch>

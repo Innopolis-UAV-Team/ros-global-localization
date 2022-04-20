@@ -1,5 +1,5 @@
 /**
- * @file node.cpp
+ * @file PCGlobalLocalizationROS.cpp
  * @author ponomarevda96@gmail.com
  * @note ROS wrapper under HAPCL Registration library
  */

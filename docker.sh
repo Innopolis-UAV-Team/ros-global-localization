@@ -59,13 +59,13 @@ push_docker_image() {
 
 run() {
     setup_config
-    docker container run --rm $DOCKER_FLAGS $DOCKER_CONTAINER_NAME ./scripts/run.sh
+    docker container run --rm $DOCKER_FLAGS $DOCKER_CONTAINER_NAME ./scripts/run_pc_global_localization.sh
 }
 
 run_rviz() {
     setup_config
     xhost +local:docker
-    docker container run --rm $DOCKER_FLAGS $DOCKER_CONTAINER_NAME ./scripts/run_with_rviz.sh
+    docker container run --rm $DOCKER_FLAGS $DOCKER_CONTAINER_NAME ./scripts/run_pc_global_localization_with_rviz.sh
 }
 
 test() {

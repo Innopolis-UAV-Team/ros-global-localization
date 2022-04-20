@@ -59,9 +59,9 @@ Typically, you need to run one of following commands with this script:
 
 Your installation process might be base don `Dockerfile`.
 
-The core of the package is `src/node.cpp` node. To use it, you should load ros parameters.
+The core of the package is `pc_global_localization` node. To use it, you should load ros parameters.
 
-The best way to use this node is to either use `launch/run.launch` file or to write your own.
+The best way to use this node is to either use `launch/run_pc_global_localization.launch` file or to write your own.
 
 ## 6. Running ROS package with prerecorded dataset
 

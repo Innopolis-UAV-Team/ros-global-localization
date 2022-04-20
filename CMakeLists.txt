@@ -59,9 +59,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC ./include)
 target_link_libraries(PCRegistrationAlgorithmTest ${PROJECT_NAME})
 
 # 2. Build Node
-add_executable(node src/node.cpp)
-target_include_directories(node PUBLIC ./include)
-target_link_libraries(node
+add_executable(pc_global_localization src/PCGlobalLocalizationROS.cpp)
+target_include_directories(pc_global_localization PUBLIC ./include)
+target_link_libraries(pc_global_localization
     PUBLIC ${PROJECT_NAME}
     PUBLIC ${catkin_LIBRARIES}
     PUBLIC ${PCL_LIBRARIES}
@@ -72,4 +72,4 @@ target_link_libraries(node
     PRIVATE HNSW_graph_search
 )
 include_directories(include ${catkin_INCLUDE_DIRS})
-add_dependencies(node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(pc_global_localization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

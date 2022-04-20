@@ -5,4 +5,4 @@ source /catkin_ws/devel/setup.bash
 set -e
 
 # set `line buffering` mode to stdout
-stdbuf -o L roslaunch pc_global_localization run.launch
+stdbuf -o L roslaunch pc_global_localization run_pc_global_localization_with_rviz.launch
